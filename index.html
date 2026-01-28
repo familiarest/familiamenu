@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Меню Ресторана</title>
+    
+    <style>
+        /* --- ПОДКЛЮЧЕНИЕ ШРИФТА MASVOL --- */
+        @font-face {
+            font-family: 'Masvol';
+            /* ВАЖНО: Убедись, что файл шрифта называется именно так и лежит рядом */
+            src: url('Masvol.otf') format('opentype'),
+                 url('Masvol.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        /* --- 1. СТИЛИ (Дизайн) --- */
+        :root {
+            --primary-color: #8B4513; 
+            --bg-color: #1a1a1a;
+            /* Теперь используем Masvol */
+            --text-font: 'Masvol', 'Playfair Display', serif; 
+        }
+
+        body { 
+            margin: 0; 
+            font-family: var(--text-font); 
+            background-color: var(--bg-color); 
+            color: white; 
+            height: 100vh; 
+            overflow: hidden;
+        }
+        
+        button { font-family: var(--text-font); cursor: pointer; outline: none; }
+
+        /* === ЭКРАН 1: ЛЭНДИНГ (Обложка) === */
+        #landing-page {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            /* Убедись, что img1.jpg - это твоя красивая обложка */
+            background: url('img1.jpg') no-repeat center center/cover; 
+            z-index: 20;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            padding-bottom: 40px;
+        }
+        
+        #landing-page::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); z-index: -1;
+        }
+
+        .landing-categories {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            max-width: 350px; margin-bottom: 30px;
+        }
+        .cat-pill {
+            background: rgba(60, 30, 20, 0.7); 
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #ddd; padding: 10px 18px; border-radius: 30px; /* Чуть увеличил для Masvol */
+            text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
+            transition: 0.2s;
+        }
+        .cat-pill:hover { background: var(--primary-color); border-color: var(--primary-color); color: white; }
+
+        .btn-open {
+            background: rgba(60, 30, 20, 0.85);
+            border: 1px solid rgba(139, 69, 19, 0.6);
+            color: white; font-size: 1.8rem; /* Masvol обычно выглядит чуть мельче, увеличил */
+            padding: 15px 60px;
+            border-radius: 12px; letter-spacing: 3px; text-transform: uppercase;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            margin-bottom: 50px;
+            transition: 0.3s;
+        }
+        .btn-open:active { transform: scale(0.98); }
+
+        /* === ЭКРАН 2: ПРОСМОТР МЕНЮ === */
+        #viewer-page {
+            display: none; 
+            position: relative; width: 100%; height: 100%;
+            flex-direction: column;
+        }
+
+        .top-nav {
+            position: absolute; top: 20px; left: 20px; z-index: 10;
+        }
+        .btn-menu {
+            background: transparent; border: 1px solid rgba(255,255,255,0.4);
+            color: #ddd; padding: 10px 20px; text-transform: uppercase;
+            font-size: 0.9rem; letter-spacing: 1px;
+        }
+
+        .image-container {
+            flex-grow: 1; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            background: #000;
+        }
+        #current-image {
+            width: 100%; height: 100%; object-fit: contain;
+        }
+
+        .bottom-bar {
+            height: 70px; /* Чуть выше для удобства */
+            background-color: #5D2E1F; 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 10px; color: rgba(255,255,255,0.9);
+            font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .nav-link { 
+            background: none; border: none; color: inherit; padding: 15px; 
+            font-size: inherit; text-transform: inherit; letter-spacing: inherit;
+        }
+        .nav-center { font-size: 1.1rem; color: white; letter-spacing: 2px; }
+
+        /* === БОКОВОЕ МЕНЮ (БУРГЕР) === */
+        #sidebar {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 30;
+            transform: translateX(-100%); transition: transform 0.3s ease;
+            display: flex; flex-direction: column; padding-top: 60px;
+        }
+        #sidebar.open { transform: translateX(0); }
+
+        .sidebar-item {
+            padding: 22px 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: white; font-size: 1.4rem; text-transform: uppercase;
+            letter-spacing: 1px; cursor: pointer;
+        }
+        .sidebar-item:first-child { border-top: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-item:hover { background: rgba(139, 69, 19, 0.3); padding-left: 40px; transition: 0.2s; }
+
+        .close-menu-area {
+            position: absolute; top: 20px; right: 25px; font-size: 2.5rem; cursor: pointer; color: #aaa;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="landing-page">
+        <div class="landing-categories" id="landing-cats"></div>
+        <button class="btn-open" onclick="startApp()">ОТКРЫТЬ</button>
+    </div>
+
+    <div id="viewer-page">
+        <div class="top-nav">
+            <button class="btn-menu" onclick="toggleMenu()">Меню</button>
+        </div>
+        <div class="image-container">
+            <img id="current-image" src="" alt="Страница меню">
+        </div>
+        <div class="bottom-bar">
+            <button class="nav-link" onclick="changeSlide(-1)">← Назад</button>
+            <div class="nav-center" id="page-indicator">01 / ЗАВТРАКИ</div>
+            <button class="nav-link" onclick="changeSlide(1)">Вперед →</button>
+        </div>
+    </div>
+
+    <div id="sidebar">
+        <div class="close-menu-area" onclick="toggleMenu()">×</div>
+        <div id="sidebar-list"></div>
+    </div>
+
+    <script>
+        /* === НАСТРОЙКИ === */
+        const menuData = [
+            { src: 'img1.jpg', category: 'Завтраки' }, 
+            { src: 'img2.jpg', category: 'Завтраки' }, 
+            { src: 'img3.jpg', category: 'Пицца' },
+            { src: 'img4.jpg', category: 'Закуски' },
+            { src: 'img5.jpg', category: 'Салаты' },
+            { src: 'img6.jpg', category: 'Паста' },
+            { src: 'img7.jpg', category: 'Первые блюда' },
+            { src: 'img8.jpg', category: 'Вторые блюда' },
+            { src: 'img9.jpg', category: 'Детское меню' },
+            { src: 'img10.jpg', category: 'Десерты' }
+        ];
+
+        /* === ЛОГИКА === */
+        let currentIndex = 0;
+        const landingPage = document.getElementById('landing-page');
+        const viewerPage = document.getElementById('viewer-page');
+        const sidebar = document.getElementById('sidebar');
+        const imgElement = document.getElementById('current-image');
+        const indicator = document.getElementById('page-indicator');
+
+        const categories = [...new Set(menuData.map(item => item.category))];
+
+        function init() {
+            const landingCatsContainer = document.getElementById('landing-cats');
+            categories.forEach(cat => {
+                const btn = document.createElement('div');
+                btn.className = 'cat-pill';
+                btn.innerText = cat;
+                btn.onclick = () => { startApp(); jumpToCategory(cat); };
+                landingCatsContainer.appendChild(btn);
+            });
+
+            const sidebarList = document.getElementById('sidebar-list');
+            categories.forEach(cat => {
+                const item = document.createElement('div');
+                item.className = 'sidebar-item';
+                item.innerText = cat;
+                item.onclick = () => { jumpToCategory(cat); toggleMenu(); };
+                sidebarList.appendChild(item);
+            });
+            updateViewer();
+        }
+
+        function startApp() {
+            landingPage.style.display = 'none';
+            viewerPage.style.display = 'flex';
+        }
+
+        function updateViewer() {
+            const item = menuData[currentIndex];
+            imgElement.src = item.src;
+            const pageNum = (currentIndex + 1).toString().padStart(2, '0');
+            indicator.innerText = `${pageNum} / ${item.category}`;
+            imgElement.onerror = function() {
+                 this.src = `https://via.placeholder.com/600x900/1a1a1a/FFFFFF?text=${item.category}`;
+            };
+        }
+
+        function changeSlide(direction) {
+            currentIndex += direction;
+            if (currentIndex >= menuData.length) currentIndex = 0; 
+            if (currentIndex < 0) currentIndex = menuData.length - 1;
+            updateViewer();
+        }
+
+        function jumpToCategory(catName) {
+            const index = menuData.findIndex(item => item.category === catName);
+            if (index !== -1) {
+                currentIndex = index;
+                updateViewer();
+            }
+        }
+
+        function toggleMenu() {
+            sidebar.classList.toggle('open');
+        }
+
+        init();
+    </script>
+</body>
+</html>

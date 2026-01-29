@@ -2,44 +2,63 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Меню Ресторана</title>
     
     <style>
         /* --- ПОДКЛЮЧЕНИЕ ШРИФТА MASVOL --- */
         @font-face {
             font-family: 'Masvol';
-            /* ВАЖНО: Убедись, что файл шрифта называется именно так и лежит рядом */
+            /* Файл шрифта должен лежать рядом с index.html */
             src: url('Masvol.otf') format('opentype'),
                  url('Masvol.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
         }
 
-        /* --- 1. СТИЛИ (Дизайн) --- */
+        /* --- 1. ГЛОБАЛЬНЫЕ СТИЛИ (ФОН СТОЛА) --- */
         :root {
             --primary-color: #8B4513; 
-            --bg-color: #1a1a1a;
-            /* Теперь используем Masvol */
+            --app-bg: #1a1a1a;
             --text-font: 'Masvol', 'Playfair Display', serif; 
         }
 
         body { 
             margin: 0; 
-            font-family: var(--text-font); 
-            background-color: var(--bg-color); 
-            color: white; 
+            background-color: #0f0f0f; /* Темный фон "вокруг" телефона */
             height: 100vh; 
-            overflow: hidden;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            font-family: var(--text-font);
         }
         
-        button { font-family: var(--text-font); cursor: pointer; outline: none; }
+        button { font-family: var(--text-font); cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+
+        /* --- 2. РАМКА ТЕЛЕФОНА (iPhone 17 Pro Max Style) --- */
+        #app-frame {
+            width: 100%;
+            max-width: 440px; /* Ширина большого iPhone */
+            height: 100%;
+            max-height: 100vh;
+            background-color: var(--app-bg);
+            position: relative;
+            overflow: hidden; /* Всё, что вылезает за рамки — обрезаем */
+            box-shadow: 0 0 50px rgba(0,0,0,0.5); /* Тень, чтобы выделить "телефон" */
+            color: white;
+        }
+
+        /* Если открываем с реального телефона — убираем рамки */
+        @media (max-width: 450px) {
+            #app-frame { max-width: 100%; height: 100vh; box-shadow: none; }
+            body { background-color: var(--app-bg); }
+        }
 
         /* === ЭКРАН 1: ЛЭНДИНГ (Обложка) === */
         #landing-page {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            /* Убедись, что img1.jpg - это твоя красивая обложка */
-            background: url('img1.jpg') no-repeat center center/cover; 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            /* Путь к первой картинке в папке img */
+            background: url('img/1.jpg') no-repeat center center/cover; 
             z-index: 20;
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
             padding-bottom: 40px;
@@ -51,14 +70,14 @@
         }
 
         .landing-categories {
-            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
-            max-width: 350px; margin-bottom: 30px;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+            max-width: 90%; margin-bottom: 30px;
         }
         .cat-pill {
             background: rgba(60, 30, 20, 0.7); 
             border: 1px solid rgba(255,255,255,0.3);
-            color: #ddd; padding: 10px 18px; border-radius: 30px; /* Чуть увеличил для Masvol */
-            text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
+            color: #ddd; padding: 10px 16px; border-radius: 30px;
+            text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;
             transition: 0.2s;
         }
         .cat-pill:hover { background: var(--primary-color); border-color: var(--primary-color); color: white; }
@@ -66,20 +85,21 @@
         .btn-open {
             background: rgba(60, 30, 20, 0.85);
             border: 1px solid rgba(139, 69, 19, 0.6);
-            color: white; font-size: 1.8rem; /* Masvol обычно выглядит чуть мельче, увеличил */
-            padding: 15px 60px;
+            color: white; font-size: 1.6rem; 
+            padding: 15px 50px;
             border-radius: 12px; letter-spacing: 3px; text-transform: uppercase;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            margin-bottom: 50px;
-            transition: 0.3s;
+            margin-bottom: 40px;
+            transition: 0.2s;
         }
-        .btn-open:active { transform: scale(0.98); }
+        .btn-open:active { transform: scale(0.96); }
 
         /* === ЭКРАН 2: ПРОСМОТР МЕНЮ === */
         #viewer-page {
             display: none; 
-            position: relative; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             flex-direction: column;
+            background-color: #000;
         }
 
         .top-nav {
@@ -88,46 +108,47 @@
         .btn-menu {
             background: transparent; border: 1px solid rgba(255,255,255,0.4);
             color: #ddd; padding: 10px 20px; text-transform: uppercase;
-            font-size: 0.9rem; letter-spacing: 1px;
+            font-size: 0.8rem; letter-spacing: 1px;
+            backdrop-filter: blur(4px);
         }
 
         .image-container {
             flex-grow: 1; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
-            background: #000;
+            overflow: hidden;
         }
         #current-image {
             width: 100%; height: 100%; object-fit: contain;
         }
 
         .bottom-bar {
-            height: 70px; /* Чуть выше для удобства */
+            height: 70px; flex-shrink: 0;
             background-color: #5D2E1F; 
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0 10px; color: rgba(255,255,255,0.9);
-            font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+            padding: 0 5px; color: rgba(255,255,255,0.9);
+            font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
         .nav-link { 
-            background: none; border: none; color: inherit; padding: 15px; 
+            background: none; border: none; color: inherit; padding: 15px 10px; 
             font-size: inherit; text-transform: inherit; letter-spacing: inherit;
         }
-        .nav-center { font-size: 1.1rem; color: white; letter-spacing: 2px; }
+        .nav-center { font-size: 1rem; color: white; letter-spacing: 1px; white-space: nowrap; }
 
         /* === БОКОВОЕ МЕНЮ (БУРГЕР) === */
         #sidebar {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95);
             z-index: 30;
-            transform: translateX(-100%); transition: transform 0.3s ease;
+            transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex; flex-direction: column; padding-top: 60px;
         }
         #sidebar.open { transform: translateX(0); }
 
         .sidebar-item {
-            padding: 22px 30px;
+            padding: 20px 30px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            color: white; font-size: 1.4rem; text-transform: uppercase;
+            color: white; font-size: 1.3rem; text-transform: uppercase;
             letter-spacing: 1px; cursor: pointer;
         }
         .sidebar-item:first-child { border-top: 1px solid rgba(255,255,255,0.1); }
@@ -141,43 +162,50 @@
 </head>
 <body>
 
-    <div id="landing-page">
-        <div class="landing-categories" id="landing-cats"></div>
-        <button class="btn-open" onclick="startApp()">ОТКРЫТЬ</button>
-    </div>
+    <div id="app-frame">
 
-    <div id="viewer-page">
-        <div class="top-nav">
-            <button class="btn-menu" onclick="toggleMenu()">Меню</button>
+        <div id="landing-page">
+            <div class="landing-categories" id="landing-cats"></div>
+            <button class="btn-open" onclick="startApp()">ОТКРЫТЬ</button>
         </div>
-        <div class="image-container">
-            <img id="current-image" src="" alt="Страница меню">
-        </div>
-        <div class="bottom-bar">
-            <button class="nav-link" onclick="changeSlide(-1)">← Назад</button>
-            <div class="nav-center" id="page-indicator">01 / ЗАВТРАКИ</div>
-            <button class="nav-link" onclick="changeSlide(1)">Вперед →</button>
-        </div>
-    </div>
 
-    <div id="sidebar">
-        <div class="close-menu-area" onclick="toggleMenu()">×</div>
-        <div id="sidebar-list"></div>
+        <div id="viewer-page">
+            <div class="top-nav">
+                <button class="btn-menu" onclick="toggleMenu()">Меню</button>
+            </div>
+            <div class="image-container">
+                <img id="current-image" src="" alt="Меню">
+            </div>
+            <div class="bottom-bar">
+                <button class="nav-link" onclick="changeSlide(-1)">← Назад</button>
+                <div class="nav-center" id="page-indicator">Загрузка...</div>
+                <button class="nav-link" onclick="changeSlide(1)">Вперед →</button>
+            </div>
+        </div>
+
+        <div id="sidebar">
+            <div class="close-menu-area" onclick="toggleMenu()">×</div>
+            <div id="sidebar-list"></div>
+        </div>
+
     </div>
 
     <script>
-        /* === НАСТРОЙКИ === */
+        /* === ВАЖНО: НАСТРОЙКИ === */
+        // src: путь к файлу (img/название.jpg)
+        // category: название раздела
+        
         const menuData = [
-            { src: 'img1.jpg', category: 'Завтраки' }, 
-            { src: 'img2.jpg', category: 'Завтраки' }, 
-            { src: 'img3.jpg', category: 'Пицца' },
-            { src: 'img4.jpg', category: 'Закуски' },
-            { src: 'img5.jpg', category: 'Салаты' },
-            { src: 'img6.jpg', category: 'Паста' },
-            { src: 'img7.jpg', category: 'Первые блюда' },
-            { src: 'img8.jpg', category: 'Вторые блюда' },
-            { src: 'img9.jpg', category: 'Детское меню' },
-            { src: 'img10.jpg', category: 'Десерты' }
+            { src: 'img/1.jpg', category: 'Завтраки' }, // Заставка и первая стр.
+            { src: 'img/2.jpg', category: 'Завтраки' }, 
+            { src: 'img/3.jpg', category: 'Пицца' },
+            { src: 'img/4.jpg', category: 'Закуски' },
+            { src: 'img/5.jpg', category: 'Салаты' },
+            { src: 'img/6.jpg', category: 'Паста' },
+            { src: 'img/7.jpg', category: 'Первые блюда' },
+            { src: 'img/8.jpg', category: 'Вторые блюда' },
+            { src: 'img/9.jpg', category: 'Детское меню' },
+            { src: 'img/10.jpg', category: 'Десерты' }
         ];
 
         /* === ЛОГИКА === */
@@ -191,6 +219,7 @@
         const categories = [...new Set(menuData.map(item => item.category))];
 
         function init() {
+            // Кнопки на главной
             const landingCatsContainer = document.getElementById('landing-cats');
             categories.forEach(cat => {
                 const btn = document.createElement('div');
@@ -200,6 +229,7 @@
                 landingCatsContainer.appendChild(btn);
             });
 
+            // Список в меню
             const sidebarList = document.getElementById('sidebar-list');
             categories.forEach(cat => {
                 const item = document.createElement('div');
@@ -221,8 +251,10 @@
             imgElement.src = item.src;
             const pageNum = (currentIndex + 1).toString().padStart(2, '0');
             indicator.innerText = `${pageNum} / ${item.category}`;
+            
+            // Заглушка, если файла нет
             imgElement.onerror = function() {
-                 this.src = `https://via.placeholder.com/600x900/1a1a1a/FFFFFF?text=${item.category}`;
+                 this.src = `https://via.placeholder.com/440x800/222/FFF?text=${item.category}`;
             };
         }
 

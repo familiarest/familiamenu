@@ -14,7 +14,7 @@
             font-style: normal;
         }
 
-        /* --- СТИЛИ --- */
+        /* --- БАЗА --- */
         :root {
             --primary-color: #8B4513; 
             --app-bg: #1a1a1a;
@@ -22,11 +22,8 @@
         }
 
         body { 
-            margin: 0; 
-            background-color: #0f0f0f;
-            /* ВАЖНО: Блокируем скролл всей страницы */
-            height: 100vh; 
-            height: 100dvh; /* Для мобильных браузеров (учитывает адресную строку) */
+            margin: 0; background-color: #0f0f0f;
+            height: 100vh; height: 100dvh; 
             overflow: hidden;
             display: flex; justify-content: center; align-items: center;
             font-family: var(--text-font);
@@ -35,29 +32,35 @@
         
         button { font-family: var(--text-font); cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
 
-        /* РАМКА ПРИЛОЖЕНИЯ */
         #app-frame {
-            width: 100%; max-width: 440px; 
-            height: 100%; 
-            position: relative; 
+            width: 100%; max-width: 440px; height: 100%; position: relative; 
             background-color: var(--app-bg); 
-            display: flex; flex-direction: column; /* Вертикальная колонка */
-            box-shadow: 0 0 50px rgba(0,0,0,0.5); 
-            color: white;
-            overflow: hidden; /* Обрезаем всё лишнее */
+            display: flex; flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5); color: white;
+            overflow: hidden;
         }
 
         @media (max-width: 450px) {
             #app-frame { max-width: 100%; box-shadow: none; }
         }
 
-        /* === ЭКРАН 1: ЛЭНДИНГ === */
+        /* === 1. ЛЭНДИНГ И АНИМАЦИЯ ОТКРЫТИЯ === */
         #landing-page {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: url('1.webp') no-repeat center center/cover; 
             z-index: 50; 
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
             padding-bottom: 40px;
+            
+            /* Анимация исчезновения */
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        
+        /* Класс для скрытия лэндинга */
+        .landing-hidden {
+            opacity: 0;
+            transform: scale(1.1); /* Легкое увеличение при исчезновении */
+            pointer-events: none;
         }
         
         #landing-page::before {
@@ -76,39 +79,44 @@
             text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
             transition: 0.2s; cursor: pointer;
         }
-        .cat-pill:hover { background: var(--primary-color); border-color: var(--primary-color); color: white; }
+        .cat-pill:hover { background: var(--primary-color); border-color: var(--primary-color); color: white; transform: scale(1.05); }
 
         .btn-open {
             background: rgba(60, 30, 20, 0.9);
             border: 1px solid rgba(139, 69, 19, 0.6);
             color: white; font-size: 1.6rem; 
-            padding: 15px 50px;
-            border-radius: 12px; letter-spacing: 3px; text-transform: uppercase;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            margin-bottom: 50px; /* Чуть выше */
+            padding: 15px 50px; border-radius: 12px; letter-spacing: 3px; 
+            text-transform: uppercase; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            margin-bottom: 50px;
+            transition: transform 0.1s;
         }
-        .btn-open:active { transform: scale(0.96); }
+        .btn-open:active { transform: scale(0.95); }
 
-        /* === ЭКРАН 2: ПРОСМОТР (Fix Layout) === */
+        /* === 2. ПРОСМОТР === */
         #viewer-page {
-            display: none; 
-            width: 100%; height: 100%;
-            flex-direction: column; /* Строго вертикально: Шапка -> Фото -> Подвал */
+            /* Сначала скрыт прозрачностью, а не display:none, чтобы работала анимация */
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
             background-color: #000;
+            opacity: 0; transition: opacity 0.8s ease; /* Плавное появление */
+            z-index: 10;
+            pointer-events: none; /* Чтобы не кликать пока не виден */
+        }
+        
+        .viewer-visible {
+            opacity: 1 !important;
+            pointer-events: auto !important;
         }
 
-        /* Невидимые зоны клика поверх фото */
         .tap-layer {
             position: absolute; top: 60px; bottom: 70px; left: 0; width: 100%;
-            z-index: 10; display: flex;
+            z-index: 15; display: flex;
         }
         .tap-left { width: 50%; height: 100%; }
         .tap-right { width: 50%; height: 100%; }
 
-        /* Верхняя панель */
         .top-bar-area {
-            height: 60px; flex-shrink: 0; /* Не сжимать */
-            display: flex; align-items: center; padding-left: 20px;
+            height: 60px; flex-shrink: 0; display: flex; align-items: center; padding-left: 20px;
             z-index: 20; position: absolute; top: 0; left: 0; width: 100%;
         }
         .btn-menu {
@@ -118,70 +126,103 @@
             backdrop-filter: blur(4px);
         }
 
-        /* Контейнер фото (Занимает всё свободное место) */
         .image-wrapper {
-            flex-grow: 1; /* Растягивается на всю доступную высоту */
-            width: 100%;
-            position: relative;
+            flex-grow: 1; width: 100%; position: relative;
             display: flex; align-items: center; justify-content: center;
             overflow: hidden;
+            perspective: 1000px; /* Для 3D эффектов если захотим */
         }
         
         #current-image {
-            max-width: 100%; 
-            max-height: 100%; /* Картинка никогда не будет больше экрана */
-            object-fit: contain; /* Вписываем фото целиком */
+            max-width: 100%; max-height: 100%; object-fit: contain;
             display: block;
-            transition: opacity 0.2s ease;
+            /* Базовое состояние для анимаций */
+            transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+            opacity: 1;
+            transform: translateX(0);
         }
 
-        /* Лоадер (крутилка), пока грузится фото */
+        /* --- КЛАССЫ АНИМАЦИИ СВАЙПА --- */
+        
+        /* Уход влево (при клике Вперед) */
+        .slide-out-left { transform: translateX(-40px) !important; opacity: 0 !important; }
+        /* Появление справа (при клике Вперед) */
+        .slide-in-right { animation: enterFromRight 0.4s forwards; }
+        
+        /* Уход вправо (при клике Назад) */
+        .slide-out-right { transform: translateX(40px) !important; opacity: 0 !important; }
+        /* Появление слева (при клике Назад) */
+        .slide-in-left { animation: enterFromLeft 0.4s forwards; }
+
+        @keyframes enterFromRight {
+            0% { transform: translateX(40px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes enterFromLeft {
+            0% { transform: translateX(-40px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Лоадер */
         .loader {
             position: absolute; width: 40px; height: 40px;
             border: 4px solid #333; border-top: 4px solid var(--primary-color);
             border-radius: 50%; animation: spin 1s linear infinite;
-            z-index: -1; /* Под картинкой */
+            z-index: -1;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Нижняя панель */
         .bottom-bar {
-            height: 80px; flex-shrink: 0; /* Фиксированная высота */
-            background-color: #5D2E1F; 
+            height: 80px; flex-shrink: 0; background-color: #5D2E1F; 
             display: flex; justify-content: space-between; align-items: center;
             padding: 0 10px; color: rgba(255,255,255,0.95);
             font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            z-index: 20;
-            padding-bottom: env(safe-area-inset-bottom); /* Отступ для iPhone полоски */
+            border-top: 1px solid rgba(255,255,255,0.1); z-index: 20;
+            padding-bottom: env(safe-area-inset-bottom);
         }
-        .nav-link { 
-            background: none; border: none; color: inherit; padding: 20px; 
-            font-size: 1.5rem; 
-        }
+        .nav-link { background: none; border: none; color: inherit; padding: 20px; font-size: 1.5rem; transition: opacity 0.2s; }
+        .nav-link:active { opacity: 0.5; }
+        
         .nav-center { 
             font-size: 1rem; color: white; letter-spacing: 1px; white-space: nowrap; 
             cursor: pointer; padding: 15px;
+            transition: transform 0.2s;
         }
+        /* Анимация текста при смене */
+        .text-pop { animation: popText 0.3s ease; }
+        @keyframes popText { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.9); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
 
         /* === БОКОВОЕ МЕНЮ === */
         #sidebar {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.96);
-            z-index: 100;
-            transform: translateX(-100%); transition: transform 0.3s ease;
+            background: rgba(0, 0, 0, 0.96); z-index: 100;
+            transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
             display: flex; flex-direction: column; padding-top: 60px;
         }
         #sidebar.open { transform: translateX(0); }
 
         .sidebar-item {
-            padding: 22px 30px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 22px 30px; border-bottom: 1px solid rgba(255,255,255,0.1);
             color: white; font-size: 1.2rem; text-transform: uppercase;
             letter-spacing: 1px; cursor: pointer;
+            opacity: 0; transform: translateX(-20px); transition: 0.3s; /* Для анимации появления */
         }
+        /* Каскадное появление пунктов меню */
+        #sidebar.open .sidebar-item { opacity: 1; transform: translateX(0); }
+        /* Задержки для каждого пункта */
+        #sidebar.open .sidebar-item:nth-child(1) { transition-delay: 0.1s; }
+        #sidebar.open .sidebar-item:nth-child(2) { transition-delay: 0.15s; }
+        #sidebar.open .sidebar-item:nth-child(3) { transition-delay: 0.2s; }
+        #sidebar.open .sidebar-item:nth-child(4) { transition-delay: 0.25s; }
+        #sidebar.open .sidebar-item:nth-child(5) { transition-delay: 0.3s; }
+        #sidebar.open .sidebar-item:nth-child(6) { transition-delay: 0.35s; }
+        #sidebar.open .sidebar-item:nth-child(7) { transition-delay: 0.4s; }
+        #sidebar.open .sidebar-item:nth-child(8) { transition-delay: 0.45s; }
+        #sidebar.open .sidebar-item:nth-child(9) { transition-delay: 0.5s; }
+        #sidebar.open .sidebar-item:nth-child(10) { transition-delay: 0.55s; }
+
         .sidebar-item:first-child { border-top: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-item:hover { background: rgba(139, 69, 19, 0.4); padding-left: 40px; transition: 0.2s; }
+        .sidebar-item:hover { background: rgba(139, 69, 19, 0.4); padding-left: 40px; }
         .close-menu-area { position: absolute; top: 20px; right: 25px; font-size: 2.5rem; cursor: pointer; color: #aaa; }
 
     </style>
@@ -196,7 +237,6 @@
         </div>
 
         <div id="viewer-page">
-            
             <div class="top-bar-area">
                 <button class="btn-menu" onclick="toggleMenu()">Меню</button>
             </div>
@@ -208,7 +248,7 @@
 
             <div class="image-wrapper">
                 <div class="loader"></div>
-                <img id="current-image" src="" alt="Меню" onload="this.style.opacity=1" onerror="this.style.opacity=0">
+                <img id="current-image" src="" alt="Меню">
             </div>
             
             <div class="bottom-bar">
@@ -226,43 +266,32 @@
     </div>
 
     <script>
-        /* === ДАННЫЕ (Файлы 2..22) === */
         const menuData = [
-            // Завтраки (2,3,4)
             { src: '2.webp', category: 'Завтраки' }, 
             { src: '3.webp', category: 'Завтраки' }, 
             { src: '4.webp', category: 'Завтраки' },
-            // Пицца (5,6,7,8)
             { src: '5.webp', category: 'Пицца' },
             { src: '6.webp', category: 'Пицца' },
             { src: '7.webp', category: 'Пицца' },
             { src: '8.webp', category: 'Пицца' },
-            // Закуски (9,10,11)
             { src: '9.webp', category: 'Закуски' },
             { src: '10.webp', category: 'Закуски' },
             { src: '11.webp', category: 'Закуски' },
-            // Салаты (12,13,14)
             { src: '12.webp', category: 'Салаты' },
             { src: '13.webp', category: 'Салаты' },
             { src: '14.webp', category: 'Салаты' },
-            // Паста (15)
             { src: '15.webp', category: 'Паста' },
-            // Первое (16)
             { src: '16.webp', category: 'Первые блюда' },
-            // Второе (17,18)
             { src: '17.webp', category: 'Вторые блюда' },
             { src: '18.webp', category: 'Вторые блюда' },
-            // Детское (19,20)
             { src: '19.webp', category: 'Детское меню' },
             { src: '20.webp', category: 'Детское меню' },
-            // Десерты (21,22)
             { src: '21.webp', category: 'Десерты' },
             { src: '22.webp', category: 'Десерты' }
         ];
 
-        /* === ЛОГИКА === */
         let currentIndex = 0;
-        const totalPages = menuData.length; // Всего 21 страница
+        const totalPages = menuData.length;
         
         const landingPage = document.getElementById('landing-page');
         const viewerPage = document.getElementById('viewer-page');
@@ -273,7 +302,6 @@
         const categories = [...new Set(menuData.map(item => item.category))];
 
         function init() {
-            // Кнопки на главной
             const landingCatsContainer = document.getElementById('landing-cats');
             categories.forEach(cat => {
                 const btn = document.createElement('div');
@@ -283,7 +311,6 @@
                 landingCatsContainer.appendChild(btn);
             });
 
-            // Кнопки в боковом меню
             const sidebarList = document.getElementById('sidebar-list');
             categories.forEach(cat => {
                 const item = document.createElement('div');
@@ -293,51 +320,102 @@
                 sidebarList.appendChild(item);
             });
             
-            // Загружаем первую (скрыто)
-            updateViewer();
+            // Загружаем первую картинку тихо
+            const item = menuData[currentIndex];
+            imgElement.src = item.src;
+            const currentNum = (currentIndex + 1).toString().padStart(2, '0');
+            indicator.innerText = `${currentNum} / ${item.category}`;
         }
 
         function startApp() {
-            landingPage.style.display = 'none';
-            viewerPage.style.display = 'flex'; // flex нужен для правильной верстки
+            // Анимация ухода заставки
+            landingPage.classList.add('landing-hidden');
+            // Анимация появления вьювера
+            viewerPage.classList.add('viewer-visible');
         }
 
         function goHome() {
-            landingPage.style.display = 'flex';
-            viewerPage.style.display = 'none';
+            landingPage.classList.remove('landing-hidden');
+            viewerPage.classList.remove('viewer-visible');
         }
 
-        function updateViewer() {
-            const item = menuData[currentIndex];
-            
-            // Сбрасываем прозрачность для эффекта загрузки
-            imgElement.style.opacity = 0;
-            imgElement.src = item.src;
-            
-            // СКВОЗНАЯ НУМЕРАЦИЯ (1 из 21)
-            // +1 потому что индекс с 0
-            const currentNum = (currentIndex + 1).toString().padStart(2, '0');
-            indicator.innerText = `${currentNum} / ${item.category}`;
-
-            // Загрузка следующей картинки в кэш (чтобы не тупило)
-            if (currentIndex < totalPages - 1) {
-                const nextImg = new Image();
-                nextImg.src = menuData[currentIndex + 1].src;
-            }
-        }
+        // Защита от слишком быстрых кликов (чтобы анимация не дергалась)
+        let isAnimating = false;
 
         function changeSlide(direction) {
-            currentIndex += direction;
-            if (currentIndex >= totalPages) currentIndex = 0; 
-            if (currentIndex < 0) currentIndex = totalPages - 1;
-            updateViewer();
+            if (isAnimating) return;
+            isAnimating = true;
+
+            const nextIndex = getNextIndex(direction);
+            
+            // 1. Анимация исчезновения старой картинки
+            if (direction > 0) {
+                imgElement.className = 'slide-out-left'; // Уезжает влево
+            } else {
+                imgElement.className = 'slide-out-right'; // Уезжает вправо
+            }
+            
+            // Анимация текста
+            indicator.classList.remove('text-pop');
+            void indicator.offsetWidth; // Триггер перезапуска анимации
+            indicator.classList.add('text-pop');
+
+            // 2. Ждем пока уедет (300мс), потом меняем SRC
+            setTimeout(() => {
+                currentIndex = nextIndex;
+                const item = menuData[currentIndex];
+                imgElement.src = item.src;
+                
+                // Обновляем текст
+                const currentNum = (currentIndex + 1).toString().padStart(2, '0');
+                indicator.innerText = `${currentNum} / ${item.category}`;
+
+                // 3. Анимация появления новой
+                if (direction > 0) {
+                    imgElement.className = 'slide-in-right'; // Выезжает справа
+                } else {
+                    imgElement.className = 'slide-in-left'; // Выезжает слева
+                }
+
+                // Кэшируем следующую
+                preloadNext();
+
+                // Снимаем блокировку кликов
+                setTimeout(() => { isAnimating = false; }, 400);
+
+            }, 300);
+        }
+
+        function getNextIndex(direction) {
+            let idx = currentIndex + direction;
+            if (idx >= totalPages) idx = 0;
+            if (idx < 0) idx = totalPages - 1;
+            return idx;
         }
 
         function jumpToCategory(catName) {
+            // Тут без анимации свайпа, просто плавное появление (фейд)
             const index = menuData.findIndex(item => item.category === catName);
             if (index !== -1) {
-                currentIndex = index;
-                updateViewer();
+                imgElement.style.opacity = 0;
+                setTimeout(() => {
+                    currentIndex = index;
+                    const item = menuData[currentIndex];
+                    imgElement.src = item.src;
+                    const currentNum = (currentIndex + 1).toString().padStart(2, '0');
+                    indicator.innerText = `${currentNum} / ${item.category}`;
+                    
+                    imgElement.className = ''; // сброс классов анимации
+                    imgElement.style.opacity = 1; // возвращаем видимость
+                }, 200);
+            }
+        }
+
+        function preloadNext() {
+            let next = currentIndex + 1;
+            if (next < totalPages) {
+                const img = new Image();
+                img.src = menuData[next].src;
             }
         }
 

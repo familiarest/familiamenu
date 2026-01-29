@@ -24,32 +24,38 @@
         body { 
             margin: 0; 
             background-color: #0f0f0f;
+            /* ВАЖНО: Блокируем скролл всей страницы */
             height: 100vh; 
+            height: 100dvh; /* Для мобильных браузеров (учитывает адресную строку) */
+            overflow: hidden;
             display: flex; justify-content: center; align-items: center;
             font-family: var(--text-font);
-            user-select: none; 
-            -webkit-user-select: none;
+            user-select: none; -webkit-user-select: none;
         }
         
         button { font-family: var(--text-font); cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
 
+        /* РАМКА ПРИЛОЖЕНИЯ */
         #app-frame {
-            width: 100%; max-width: 440px; height: 100%; max-height: 100vh;
-            background-color: var(--app-bg); position: relative; overflow: hidden;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5); color: white;
+            width: 100%; max-width: 440px; 
+            height: 100%; 
+            position: relative; 
+            background-color: var(--app-bg); 
+            display: flex; flex-direction: column; /* Вертикальная колонка */
+            box-shadow: 0 0 50px rgba(0,0,0,0.5); 
+            color: white;
+            overflow: hidden; /* Обрезаем всё лишнее */
         }
 
         @media (max-width: 450px) {
-            #app-frame { max-width: 100%; height: 100vh; box-shadow: none; }
-            body { background-color: var(--app-bg); }
+            #app-frame { max-width: 100%; box-shadow: none; }
         }
 
         /* === ЭКРАН 1: ЛЭНДИНГ === */
         #landing-page {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            /* ИСПРАВЛЕНО: путь просто '1.webp' */
             background: url('1.webp') no-repeat center center/cover; 
-            z-index: 30; 
+            z-index: 50; 
             display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
             padding-bottom: 40px;
         }
@@ -64,122 +70,145 @@
             max-width: 90%; margin-bottom: 30px;
         }
         .cat-pill {
-            background: rgba(60, 30, 20, 0.7); 
+            background: rgba(60, 30, 20, 0.8); 
             border: 1px solid rgba(255,255,255,0.3);
-            color: #ddd; padding: 10px 16px; border-radius: 30px;
-            text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;
+            color: #ddd; padding: 12px 18px; border-radius: 30px;
+            text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
             transition: 0.2s; cursor: pointer;
         }
         .cat-pill:hover { background: var(--primary-color); border-color: var(--primary-color); color: white; }
 
         .btn-open {
-            background: rgba(60, 30, 20, 0.85);
+            background: rgba(60, 30, 20, 0.9);
             border: 1px solid rgba(139, 69, 19, 0.6);
             color: white; font-size: 1.6rem; 
             padding: 15px 50px;
             border-radius: 12px; letter-spacing: 3px; text-transform: uppercase;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            margin-bottom: 40px;
-            transition: 0.2s;
+            margin-bottom: 50px; /* Чуть выше */
         }
         .btn-open:active { transform: scale(0.96); }
 
-        /* === ЭКРАН 2: ПРОСМОТР === */
+        /* === ЭКРАН 2: ПРОСМОТР (Fix Layout) === */
         #viewer-page {
             display: none; 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            flex-direction: column;
+            width: 100%; height: 100%;
+            flex-direction: column; /* Строго вертикально: Шапка -> Фото -> Подвал */
             background-color: #000;
         }
 
-        .tap-zone {
-            position: absolute; top: 0; bottom: 70px; 
-            z-index: 5; 
+        /* Невидимые зоны клика поверх фото */
+        .tap-layer {
+            position: absolute; top: 60px; bottom: 70px; left: 0; width: 100%;
+            z-index: 10; display: flex;
         }
-        .tap-left { left: 0; width: 50%; }
-        .tap-right { right: 0; width: 50%; }
+        .tap-left { width: 50%; height: 100%; }
+        .tap-right { width: 50%; height: 100%; }
 
-        .top-nav {
-            position: absolute; top: 20px; left: 20px; z-index: 20; 
+        /* Верхняя панель */
+        .top-bar-area {
+            height: 60px; flex-shrink: 0; /* Не сжимать */
+            display: flex; align-items: center; padding-left: 20px;
+            z-index: 20; position: absolute; top: 0; left: 0; width: 100%;
         }
         .btn-menu {
-            background: transparent; border: 1px solid rgba(255,255,255,0.4);
-            color: #ddd; padding: 10px 20px; text-transform: uppercase;
-            font-size: 0.8rem; letter-spacing: 1px;
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.3);
+            color: #ddd; padding: 8px 16px; text-transform: uppercase;
+            font-size: 0.8rem; letter-spacing: 1px; border-radius: 4px;
             backdrop-filter: blur(4px);
         }
 
-        .image-container {
-            flex-grow: 1; width: 100%; height: 100%;
+        /* Контейнер фото (Занимает всё свободное место) */
+        .image-wrapper {
+            flex-grow: 1; /* Растягивается на всю доступную высоту */
+            width: 100%;
+            position: relative;
             display: flex; align-items: center; justify-content: center;
             overflow: hidden;
-            position: relative;
         }
+        
         #current-image {
-            width: 100%; height: 100%; object-fit: contain;
+            max-width: 100%; 
+            max-height: 100%; /* Картинка никогда не будет больше экрана */
+            object-fit: contain; /* Вписываем фото целиком */
+            display: block;
+            transition: opacity 0.2s ease;
         }
 
+        /* Лоадер (крутилка), пока грузится фото */
+        .loader {
+            position: absolute; width: 40px; height: 40px;
+            border: 4px solid #333; border-top: 4px solid var(--primary-color);
+            border-radius: 50%; animation: spin 1s linear infinite;
+            z-index: -1; /* Под картинкой */
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Нижняя панель */
         .bottom-bar {
-            height: 70px; flex-shrink: 0;
+            height: 80px; flex-shrink: 0; /* Фиксированная высота */
             background-color: #5D2E1F; 
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0 5px; color: rgba(255,255,255,0.9);
-            font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;
+            padding: 0 10px; color: rgba(255,255,255,0.95);
+            font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase;
             border-top: 1px solid rgba(255,255,255,0.1);
-            position: relative; z-index: 20;
+            z-index: 20;
+            padding-bottom: env(safe-area-inset-bottom); /* Отступ для iPhone полоски */
         }
         .nav-link { 
-            background: none; border: none; color: inherit; padding: 15px 15px; 
-            font-size: 1.2rem; 
+            background: none; border: none; color: inherit; padding: 20px; 
+            font-size: 1.5rem; 
         }
         .nav-center { 
             font-size: 1rem; color: white; letter-spacing: 1px; white-space: nowrap; 
-            cursor: pointer; padding: 10px;
+            cursor: pointer; padding: 15px;
         }
-        .nav-center:active { opacity: 0.7; }
 
         /* === БОКОВОЕ МЕНЮ === */
         #sidebar {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 40;
-            transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(0, 0, 0, 0.96);
+            z-index: 100;
+            transform: translateX(-100%); transition: transform 0.3s ease;
             display: flex; flex-direction: column; padding-top: 60px;
         }
         #sidebar.open { transform: translateX(0); }
 
         .sidebar-item {
-            padding: 20px 30px;
+            padding: 22px 30px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            color: white; font-size: 1.3rem; text-transform: uppercase;
+            color: white; font-size: 1.2rem; text-transform: uppercase;
             letter-spacing: 1px; cursor: pointer;
         }
         .sidebar-item:first-child { border-top: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-item:hover { background: rgba(139, 69, 19, 0.3); padding-left: 40px; transition: 0.2s; }
+        .sidebar-item:hover { background: rgba(139, 69, 19, 0.4); padding-left: 40px; transition: 0.2s; }
+        .close-menu-area { position: absolute; top: 20px; right: 25px; font-size: 2.5rem; cursor: pointer; color: #aaa; }
 
-        .close-menu-area {
-            position: absolute; top: 20px; right: 25px; font-size: 2.5rem; cursor: pointer; color: #aaa;
-        }
     </style>
 </head>
 <body>
 
     <div id="app-frame">
+        
         <div id="landing-page">
             <div class="landing-categories" id="landing-cats"></div>
             <button class="btn-open" onclick="startApp()">ОТКРЫТЬ</button>
         </div>
 
         <div id="viewer-page">
-            <div class="tap-zone tap-left" onclick="changeSlide(-1)"></div>
-            <div class="tap-zone tap-right" onclick="changeSlide(1)"></div>
-
-            <div class="top-nav">
+            
+            <div class="top-bar-area">
                 <button class="btn-menu" onclick="toggleMenu()">Меню</button>
             </div>
-            
-            <div class="image-container">
-                <img id="current-image" src="" alt="Меню">
+
+            <div class="tap-layer">
+                <div class="tap-left" onclick="changeSlide(-1)"></div>
+                <div class="tap-right" onclick="changeSlide(1)"></div>
+            </div>
+
+            <div class="image-wrapper">
+                <div class="loader"></div>
+                <img id="current-image" src="" alt="Меню" onload="this.style.opacity=1" onerror="this.style.opacity=0">
             </div>
             
             <div class="bottom-bar">
@@ -193,45 +222,48 @@
             <div class="close-menu-area" onclick="toggleMenu()">×</div>
             <div id="sidebar-list"></div>
         </div>
+
     </div>
 
     <script>
-        /* === ДАННЫЕ МЕНЮ (ИСПРАВЛЕНЫ ПУТИ - БЕЗ 'IMG/') === */
+        /* === ДАННЫЕ (Файлы 2..22) === */
         const menuData = [
-            // Завтраки
+            // Завтраки (2,3,4)
             { src: '2.webp', category: 'Завтраки' }, 
             { src: '3.webp', category: 'Завтраки' }, 
             { src: '4.webp', category: 'Завтраки' },
-            // Пицца
+            // Пицца (5,6,7,8)
             { src: '5.webp', category: 'Пицца' },
             { src: '6.webp', category: 'Пицца' },
             { src: '7.webp', category: 'Пицца' },
             { src: '8.webp', category: 'Пицца' },
-            // Закуски
+            // Закуски (9,10,11)
             { src: '9.webp', category: 'Закуски' },
             { src: '10.webp', category: 'Закуски' },
             { src: '11.webp', category: 'Закуски' },
-            // Салаты
+            // Салаты (12,13,14)
             { src: '12.webp', category: 'Салаты' },
             { src: '13.webp', category: 'Салаты' },
             { src: '14.webp', category: 'Салаты' },
-            // Паста
+            // Паста (15)
             { src: '15.webp', category: 'Паста' },
-            // Первое
+            // Первое (16)
             { src: '16.webp', category: 'Первые блюда' },
-            // Второе
+            // Второе (17,18)
             { src: '17.webp', category: 'Вторые блюда' },
             { src: '18.webp', category: 'Вторые блюда' },
-            // Детское
+            // Детское (19,20)
             { src: '19.webp', category: 'Детское меню' },
             { src: '20.webp', category: 'Детское меню' },
-            // Десерты
+            // Десерты (21,22)
             { src: '21.webp', category: 'Десерты' },
             { src: '22.webp', category: 'Десерты' }
         ];
 
         /* === ЛОГИКА === */
         let currentIndex = 0;
+        const totalPages = menuData.length; // Всего 21 страница
+        
         const landingPage = document.getElementById('landing-page');
         const viewerPage = document.getElementById('viewer-page');
         const sidebar = document.getElementById('sidebar');
@@ -241,6 +273,7 @@
         const categories = [...new Set(menuData.map(item => item.category))];
 
         function init() {
+            // Кнопки на главной
             const landingCatsContainer = document.getElementById('landing-cats');
             categories.forEach(cat => {
                 const btn = document.createElement('div');
@@ -250,6 +283,7 @@
                 landingCatsContainer.appendChild(btn);
             });
 
+            // Кнопки в боковом меню
             const sidebarList = document.getElementById('sidebar-list');
             categories.forEach(cat => {
                 const item = document.createElement('div');
@@ -258,12 +292,14 @@
                 item.onclick = () => { jumpToCategory(cat); toggleMenu(); };
                 sidebarList.appendChild(item);
             });
+            
+            // Загружаем первую (скрыто)
             updateViewer();
         }
 
         function startApp() {
             landingPage.style.display = 'none';
-            viewerPage.style.display = 'flex';
+            viewerPage.style.display = 'flex'; // flex нужен для правильной верстки
         }
 
         function goHome() {
@@ -273,25 +309,27 @@
 
         function updateViewer() {
             const item = menuData[currentIndex];
+            
+            // Сбрасываем прозрачность для эффекта загрузки
+            imgElement.style.opacity = 0;
             imgElement.src = item.src;
             
-            const catItems = menuData.filter(i => i.category === item.category);
-            const indexInCat = catItems.findIndex(i => i.src === item.src) + 1;
-            
-            const pageNum = indexInCat.toString().padStart(2, '0');
-            indicator.innerText = `${pageNum} / ${item.category}`;
-            
-            imgElement.onerror = function() {
-                 this.alt = "Ошибка: " + item.src;
-                 // Заглушка, если файл не найден
-                 this.src = `https://via.placeholder.com/440x800/330000/FFF?text=Нет+файла+${item.src}`;
-            };
+            // СКВОЗНАЯ НУМЕРАЦИЯ (1 из 21)
+            // +1 потому что индекс с 0
+            const currentNum = (currentIndex + 1).toString().padStart(2, '0');
+            indicator.innerText = `${currentNum} / ${item.category}`;
+
+            // Загрузка следующей картинки в кэш (чтобы не тупило)
+            if (currentIndex < totalPages - 1) {
+                const nextImg = new Image();
+                nextImg.src = menuData[currentIndex + 1].src;
+            }
         }
 
         function changeSlide(direction) {
             currentIndex += direction;
-            if (currentIndex >= menuData.length) currentIndex = 0; 
-            if (currentIndex < 0) currentIndex = menuData.length - 1;
+            if (currentIndex >= totalPages) currentIndex = 0; 
+            if (currentIndex < 0) currentIndex = totalPages - 1;
             updateViewer();
         }
 

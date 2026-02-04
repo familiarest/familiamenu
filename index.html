@@ -108,7 +108,7 @@
         
         .viewer-visible { opacity: 1 !important; pointer-events: auto !important; }
 
-        /* Зоны клика (для тех кто кликает, а не свайпает) */
+        /* Зоны клика (оставляем для тех, кто кликает) */
         .tap-layer {
             position: absolute; top: 60px; bottom: 80px; left: 0; width: 100%;
             z-index: 15; display: flex;
@@ -285,7 +285,7 @@
             { src: '17.webp', category: 'Вторые блюда' },
             { src: '18.webp', category: 'Вторые блюда' },
             { src: '19.webp', category: 'Детское меню' },
-            // { src: '20.webp', category: 'Детское меню' } <-- УДАЛЕНО ПО ЗАПРОСУ
+            /* 20.webp удален, так как дублировал контент */
             { src: '21.webp', category: 'Десерты' },
             { src: '22.webp', category: 'Десерты' }
         ];
@@ -413,11 +413,11 @@
             sidebar.classList.toggle('open');
         }
 
-        // --- ЛОГИКА СВАЙПОВ (Новая функция) ---
+        // --- ЛОГИКА СВАЙПОВ (Листание пальцем) ---
         function initSwipe() {
             let touchStartX = 0;
             let touchEndX = 0;
-            const minSwipeDistance = 50; // Минимальное расстояние для считывания свайпа
+            const minSwipeDistance = 50; // Чувствительность свайпа
 
             viewerPage.addEventListener('touchstart', e => {
                 touchStartX = e.changedTouches[0].screenX;
@@ -429,18 +429,15 @@
             }, {passive: true});
 
             function handleSwipeGesture() {
-                // Если боковое меню открыто - не листаем слайды свайпом
-                if (sidebar.classList.contains('open')) return;
+                if (sidebar.classList.contains('open')) return; // Не листать, если открыто меню
 
                 const diff = touchEndX - touchStartX;
 
                 if (Math.abs(diff) > minSwipeDistance) {
                     if (diff < 0) {
-                        // Свайп влево -> следующая страница
-                        changeSlide(1);
+                        changeSlide(1); // Влево (след.)
                     } else {
-                        // Свайп вправо -> предыдущая страница
-                        changeSlide(-1);
+                        changeSlide(-1); // Вправо (пред.)
                     }
                 }
             }
